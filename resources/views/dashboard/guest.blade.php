@@ -10,6 +10,14 @@
         </div>
     </section>
 
+    <div class="container pb-4">
+        @include('partials.promotions', [
+            'serviceOfTheDay' => $serviceOfTheDay ?? null,
+            'combos' => $combos ?? collect(),
+            'loginPrompt' => true,
+        ])
+    </div>
+
     <div class="container flex-grow-1 pb-5">
         <div class="row mb-2">
             <div class="col-12 text-center">

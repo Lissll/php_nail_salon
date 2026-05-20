@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DailyServicePromotion;
 use App\Models\Service;
+use App\Models\ServiceCombo;
 use App\Services\DashboardStats\AdminStats;
 use App\Services\DashboardStats\ClientStats;
 use App\Services\DashboardStats\ManagerStats;
@@ -25,8 +27,14 @@ class DashboardController extends Controller
         
         if (!$user) {
             $services = Service::all();
-            return view('dashboard.guest', compact('services'));
+            $serviceOfTheDay = DailyServicePromotion::forToday();
+            $combos = ServiceCombo::with(['service1', 'service2'])->get();
+
+            return view('dashboard.guest', compact('services', 'serviceOfTheDay', 'combos'));
         }
+
+        $serviceOfTheDay = DailyServicePromotion::forToday();
+        $combos = ServiceCombo::with(['service1', 'service2'])->get();
 
         $stats = match (true) {
             $user->isAdmin() => $this->adminStats->get(),
@@ -35,6 +43,6 @@ class DashboardController extends Controller
             default => $this->clientStats->get($user),
         };
         
-        return view('dashboard.index', compact('user', 'stats'));
+        return view('dashboard.index', compact('user', 'stats', 'serviceOfTheDay', 'combos'));
     }
 }

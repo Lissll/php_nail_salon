@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DailyServicePromotion;
 use App\Models\Service;
 use Illuminate\Http\Request;
 
@@ -13,11 +14,12 @@ class ServiceController extends Controller
         return view('services.public', compact('services'));
     }
 
-    // Страница услуг для авторизованных пользователей
     public function index()
     {
         $services = Service::all();
-        return view('services.index', compact('services'));
+        $serviceOfTheDay = DailyServicePromotion::forToday();
+
+        return view('services.index', compact('services', 'serviceOfTheDay'));
     }
     public function manage()
     {

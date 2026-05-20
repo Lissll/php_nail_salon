@@ -19,6 +19,9 @@
         <div class="col-md-4 mb-4">
             <div class="card h-100 service-card">
                 <div class="card-body">
+                    @if($serviceOfTheDay && $serviceOfTheDay->service_id === $service->id)
+                        <span class="service-day-badge"><i class="bi bi-sun"></i> Услуга дня −{{ $serviceOfTheDay->discount_percent }}%</span>
+                    @endif
                     <h5 class="card-title">{{ $service->name }}</h5>
                     <p class="card-text">{{ $service->description }}</p>
                     <hr>
@@ -29,13 +32,24 @@
                         </div>
                         <div class="col-6">
                             <small class="text-muted">Стоимость:</small>
-                            <div class="fw-bold text-primary">{{ number_format($service->price, 2) }} ₽</div>
+                            @if($serviceOfTheDay && $serviceOfTheDay->service_id === $service->id)
+                                <div class="service-price-discounted">
+                                    <div class="original-price">{{ number_format($service->price, 2) }} ₽</div>
+                                    <div class="fw-bold text-primary">{{ number_format($serviceOfTheDay->discounted_price, 2) }} ₽</div>
+                                </div>
+                            @else
+                                <div class="fw-bold text-primary">{{ number_format($service->price, 2) }} ₽</div>
+                            @endif
                         </div>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent">
                     @if(Auth::user()->isClient())
-                        <a href="{{ route('appointments.create', ['service_id' => $service->id]) }}" class="btn btn-primary btn-sm w-100">
+                        <a href="{{ route('appointments.create', [
+                            'service_id' => $service->id,
+                            'return' => 'services',
+                            'daily_promotion' => ($serviceOfTheDay && $serviceOfTheDay->service_id === $service->id) ? 1 : null,
+                        ]) }}" class="btn btn-primary btn-sm w-100">
                             <i class="bi bi-calendar-plus"></i> Записаться
                         </a>
                     @endif

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\DailyServicePromotion;
 use App\Models\Service;
+use App\Models\ServiceCombo;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -46,8 +48,47 @@ class AppointmentController extends Controller
         
         $user = Auth::user();
         $isAdminOrManager = $user->isAdmin() || $user->isManager();
-        
-        return view('appointments.create', compact('services', 'masters', 'clients', 'isAdminOrManager', 'selectedServiceId'));
+        $serviceOfTheDay = DailyServicePromotion::forToday();
+        $backUrl = $this->resolveBackUrl(request());
+
+        $dailyPromotion = null;
+        if ($serviceOfTheDay && $selectedServiceId === $serviceOfTheDay->service_id) {
+            $dailyPromotion = $serviceOfTheDay;
+        } elseif (request()->boolean('daily_promotion') && $serviceOfTheDay) {
+            $dailyPromotion = $serviceOfTheDay;
+        }
+
+        $serviceOfTheDayData = $serviceOfTheDay ? [
+            'id' => $serviceOfTheDay->id,
+            'service_id' => $serviceOfTheDay->service_id,
+            'discount_percent' => $serviceOfTheDay->discount_percent,
+            'date' => $serviceOfTheDay->date->format('Y-m-d'),
+        ] : null;
+
+        return view('appointments.create', compact(
+            'services',
+            'masters',
+            'clients',
+            'isAdminOrManager',
+            'selectedServiceId',
+            'serviceOfTheDay',
+            'serviceOfTheDayData',
+            'dailyPromotion',
+            'backUrl'
+        ));
+    }
+
+    public function createCombo(ServiceCombo $combo)
+    {
+        $combo->load(['service1', 'service2']);
+        $masters = User::where('role', User::ROLE_MASTER)->get();
+        $clients = User::where('role', User::ROLE_CLIENT)->get();
+
+        $user = Auth::user();
+        $isAdminOrManager = $user->isAdmin() || $user->isManager();
+        $backUrl = $this->resolveBackUrl(request());
+
+        return view('appointments.create-combo', compact('combo', 'masters', 'clients', 'isAdminOrManager', 'backUrl'));
     }
 
     public function getAvailableSlots(Request $request)
@@ -139,15 +180,18 @@ class AppointmentController extends Controller
         if ($appointmentDateTime < Carbon::now()) {
             return back()->withErrors(['appointment_date' => 'Нельзя записаться на прошедшее время'])->withInput();
         }
-        
-        $existingAppointment = Appointment::where('master_id', $validated['master_id'])
-            ->where('appointment_date', $appointmentDateTime)
-            ->whereNotIn('status', ['cancelled'])
-            ->first();
-            
-        if ($existingAppointment) {
+
+        $service = Service::findOrFail($validated['service_id']);
+
+        if ($this->masterHasScheduleConflict($validated['master_id'], $appointmentDateTime, $service->duration)) {
             return back()->withErrors(['appointment_time' => 'Это время уже занято'])->withInput();
         }
+
+        $discountPercent = $this->resolveDailyDiscount(
+            (int) $validated['service_id'],
+            $appointmentDateTime,
+            $request->integer('daily_promotion_id') ?: null
+        );
 
         Appointment::create([
             'client_id' => $clientId,
@@ -155,10 +199,153 @@ class AppointmentController extends Controller
             'master_id' => $validated['master_id'],
             'appointment_date' => $appointmentDateTime,
             'status' => Appointment::STATUS_PENDING,
+            'discount_percent' => $discountPercent,
         ]);
 
+        $message = 'Запись успешно создана';
+        if ($discountPercent) {
+            $message .= " (скидка {$discountPercent}%)";
+        }
+
         return redirect()->route('appointments.index')
-            ->with('success', 'Запись успешно создана');
+            ->with('success', $message);
+    }
+
+    public function storeCombo(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'combo_id' => 'required|exists:service_combos,id',
+            'master_id_1' => 'required|exists:users,id',
+            'appointment_date_1' => 'required|date',
+            'appointment_time_1' => 'required',
+            'master_id_2' => 'required|exists:users,id',
+            'appointment_date_2' => 'required|date',
+            'appointment_time_2' => 'required',
+        ]);
+
+        $combo = ServiceCombo::with(['service1', 'service2'])->findOrFail($validated['combo_id']);
+
+        if ($user->isAdmin() || $user->isManager()) {
+            $request->validate([
+                'client_id' => 'required|exists:users,id',
+            ]);
+            $clientId = $request->client_id;
+        } else {
+            $clientId = $user->id;
+        }
+
+        $appointmentsData = [
+            [
+                'service' => $combo->service1,
+                'master_id' => $validated['master_id_1'],
+                'datetime' => Carbon::parse($validated['appointment_date_1'] . ' ' . $validated['appointment_time_1']),
+                'time_field' => 'appointment_time_1',
+                'date_field' => 'appointment_date_1',
+            ],
+            [
+                'service' => $combo->service2,
+                'master_id' => $validated['master_id_2'],
+                'datetime' => Carbon::parse($validated['appointment_date_2'] . ' ' . $validated['appointment_time_2']),
+                'time_field' => 'appointment_time_2',
+                'date_field' => 'appointment_date_2',
+            ],
+        ];
+
+        $pendingSlots = [];
+
+        foreach ($appointmentsData as $data) {
+            if ($data['datetime'] < Carbon::now()) {
+                return back()->withErrors([$data['date_field'] => 'Нельзя записаться на прошедшее время'])->withInput();
+            }
+
+            if ($this->masterHasScheduleConflict(
+                $data['master_id'],
+                $data['datetime'],
+                $data['service']->duration,
+                $pendingSlots
+            )) {
+                return back()->withErrors([
+                    $data['time_field'] => 'Выбранное время пересекается с другой записью или второй услугой комбо',
+                ])->withInput();
+            }
+
+            $pendingSlots[] = [
+                'master_id' => $data['master_id'],
+                'datetime' => $data['datetime'],
+                'duration' => $data['service']->duration,
+            ];
+        }
+
+        foreach ($appointmentsData as $data) {
+            Appointment::create([
+                'client_id' => $clientId,
+                'service_id' => $data['service']->id,
+                'service_combo_id' => $combo->id,
+                'master_id' => $data['master_id'],
+                'appointment_date' => $data['datetime'],
+                'status' => Appointment::STATUS_PENDING,
+                'discount_percent' => $combo->discount_percent,
+            ]);
+        }
+
+        return redirect()->route('appointments.index')
+            ->with('success', "Комбо «{$combo->name}» успешно забронировано (скидка {$combo->discount_percent}%)");
+    }
+
+    private function resolveDailyDiscount(int $serviceId, Carbon $appointmentDateTime, ?int $dailyPromotionId = null): ?int
+    {
+        if ($dailyPromotionId) {
+            $promotion = DailyServicePromotion::find($dailyPromotionId);
+
+            if ($promotion && (int) $promotion->service_id === $serviceId) {
+                return $promotion->discount_percent;
+            }
+        }
+
+        $promotion = DailyServicePromotion::where('service_id', $serviceId)
+            ->whereDate('date', $appointmentDateTime->toDateString())
+            ->first();
+
+        return $promotion?->discount_percent;
+    }
+
+    private function intervalsOverlap(Carbon $start1, int $duration1, Carbon $start2, int $duration2): bool
+    {
+        $end1 = $start1->copy()->addMinutes($duration1);
+        $end2 = $start2->copy()->addMinutes($duration2);
+
+        return $start1->lt($end2) && $end1->gt($start2);
+    }
+
+    private function masterHasScheduleConflict(int $masterId, Carbon $start, int $duration, array $pendingSlots = []): bool
+    {
+        $existingAppointments = Appointment::with('service')
+            ->where('master_id', $masterId)
+            ->whereDate('appointment_date', $start->toDateString())
+            ->whereNotIn('status', ['cancelled'])
+            ->get();
+
+        foreach ($existingAppointments as $appointment) {
+            $appointmentStart = Carbon::parse($appointment->appointment_date);
+
+            if ($this->intervalsOverlap($start, $duration, $appointmentStart, $appointment->service->duration)) {
+                return true;
+            }
+        }
+
+        foreach ($pendingSlots as $slot) {
+            if ((int) $slot['master_id'] !== $masterId) {
+                continue;
+            }
+
+            if ($this->intervalsOverlap($start, $duration, $slot['datetime'], $slot['duration'])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function edit(Appointment $appointment)
@@ -250,5 +437,15 @@ class AppointmentController extends Controller
             case 'cancelled': return 'status-cancelled';
             default: return '';
         }
+    }
+
+    private function resolveBackUrl(Request $request): string
+    {
+        return match ($request->query('return')) {
+            'dashboard' => route('dashboard'),
+            'services' => route('services.index'),
+            'appointments' => route('appointments.index'),
+            default => route('appointments.index'),
+        };
     }
 }

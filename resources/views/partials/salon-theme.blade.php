@@ -452,7 +452,6 @@ main.container {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Страница «Контакты» + карта */
 .contact-info p {
     margin-bottom: 15px;
 }
@@ -497,5 +496,147 @@ main.container {
 .table-dark {
     --bs-table-bg: #4a4145;
     --bs-table-border-color: rgba(255, 255, 255, 0.07);
+}
+
+.promo-section .page-heading {
+    font-size: 1.15rem;
+    margin-bottom: 1rem !important;
+}
+
+.promo-card {
+    height: 100%;
+    background: #fff;
+    border: 1px solid rgba(54, 41, 46, 0.08);
+    border-radius: var(--bs-border-radius-lg);
+    box-shadow: 0 4px 20px rgba(54, 41, 46, 0.06);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.promo-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(54, 41, 46, 0.09);
+}
+
+.promo-card-inner {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-top: 3px solid rgba(176, 109, 128, 0.55);
+}
+
+.promo-card-header {
+    padding: 1rem 1.25rem 0;
+}
+
+.promo-card-body {
+    padding: 0.5rem 1.25rem 0.75rem;
+    flex-grow: 1;
+}
+
+.promo-card-footer {
+    padding: 0 1.25rem 1.25rem;
+}
+
+.promo-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--bs-primary);
+    background: rgba(176, 109, 128, 0.1);
+    padding: 0.28rem 0.65rem;
+    border-radius: 2rem;
+}
+
+.promo-card-title {
+    font-family: var(--salon-font);
+    font-weight: 700;
+    color: var(--salon-ink);
+    font-size: 1.05rem;
+    margin: 0.65rem 0 0.35rem;
+}
+
+.promo-card-desc {
+    color: var(--salon-muted);
+    font-size: 0.88rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.45;
+}
+
+.promo-price-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.45rem;
+    margin-bottom: 0.35rem;
+}
+
+.promo-price-old {
+    text-decoration: line-through;
+    color: var(--salon-muted);
+    font-size: 0.88rem;
+}
+
+.promo-price-new {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--bs-primary);
+}
+
+.promo-save-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #5c4528;
+    background: rgba(196, 154, 108, 0.22);
+    padding: 0.18rem 0.5rem;
+    border-radius: 2rem;
+}
+
+.promo-meta {
+    font-size: 0.8rem;
+    color: var(--salon-muted);
+    margin-bottom: 0;
+}
+
+.promo-combo-items {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.75rem;
+    font-size: 0.88rem;
+    color: var(--salon-ink);
+}
+
+.promo-combo-items li {
+    padding: 0.15rem 0;
+}
+
+.promo-combo-items li::before {
+    content: '·';
+    color: var(--bs-primary);
+    font-weight: 700;
+    margin-right: 0.35rem;
+}
+
+.service-price-discounted .original-price {
+    text-decoration: line-through;
+    color: var(--salon-muted);
+    font-size: 0.85rem;
+}
+
+.service-day-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(176, 109, 128, 0.12);
+    color: var(--bs-primary);
+    padding: 0.2rem 0.55rem;
+    border-radius: 2rem;
+    margin-bottom: 0.5rem;
 }
 </style>

@@ -2,13 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'name',
         'description',
@@ -19,4 +16,9 @@ class Service extends Model
     protected $casts = [
         'price' => 'decimal:2',
     ];
+
+    public function discountedPrice(int $discountPercent): float
+    {
+        return round((float) $this->price * (1 - $discountPercent / 100), 2);
+    }
 }

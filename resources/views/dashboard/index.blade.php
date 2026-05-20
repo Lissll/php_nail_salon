@@ -21,6 +21,14 @@
     </div>
 </div>
 
+@if($user->isClient())
+    @include('partials.promotions', [
+        'serviceOfTheDay' => $serviceOfTheDay,
+        'combos' => $combos,
+        'canBook' => true,
+    ])
+@endif
+
 <div class="row">
     @if($user->isAdmin())
         <div class="col-md-3 mb-4">
@@ -200,7 +208,7 @@
                         </a>
                     </div>
                     <div class="col-md-3 mb-2">
-                        <a href="{{ route('appointments.create') }}" class="btn btn-outline-primary w-100">
+                        <a href="{{ route('appointments.create', ['return' => 'dashboard']) }}" class="btn btn-outline-primary w-100">
                             Новая запись
                         </a>
                     </div>
@@ -213,6 +221,11 @@
                     <div class="col-md-3 mb-2">
                         <a href="{{ route('users.index') }}" class="btn btn-outline-primary w-100">
                             Управление пользователями
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ route('promotions.manage') }}" class="btn btn-outline-primary w-100">
+                            Акции и комбо
                         </a>
                     </div>
                     @endif

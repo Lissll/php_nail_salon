@@ -12,6 +12,12 @@
             <div class="card-body">
                 <form method="POST" action="{{ route('appointments.store') }}" id="appointment-form">
                     @csrf
+
+                    @if($dailyPromotion ?? null)
+                        <input type="hidden" name="daily_promotion_id" id="daily_promotion_id" value="{{ $dailyPromotion->id }}">
+                    @else
+                        <input type="hidden" name="daily_promotion_id" id="daily_promotion_id" value="">
+                    @endif
                     
                     @if($isAdminOrManager)
                     <div class="mb-3">
@@ -68,6 +74,7 @@
                                id="appointment_date" 
                                name="appointment_date" 
                                min="{{ now()->format('Y-m-d') }}"
+                               value="{{ old('appointment_date', ($dailyPromotion ?? null) ? $dailyPromotion->date->format('Y-m-d') : '') }}"
                                required disabled>
                         @error('appointment_date')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -93,7 +100,7 @@
                         <button type="submit" class="btn btn-primary" id="submit-btn" disabled>
                             Записаться
                         </button>
-                        <a href="{{ route('appointments.index') }}" class="btn btn-secondary">
+                        <a href="{{ $backUrl }}" class="btn btn-secondary">
                             Назад
                         </a>
                     </div>
@@ -115,6 +122,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submit-btn');
     
     let masters = @json($masters);
+    const serviceOfTheDay = @json($serviceOfTheDayData);
+    const dailyPromotionInput = document.getElementById('daily_promotion_id');
     
     function checkFormComplete() {
         if (serviceSelect.value && masterSelect.value && dateInput.value && timeSelect.value) {
@@ -124,16 +133,37 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function updateDailyPromotionState() {
+        if (!dailyPromotionInput || !serviceOfTheDay) {
+            return;
+        }
+
+        if (Number(serviceSelect.value) === serviceOfTheDay.service_id) {
+            dailyPromotionInput.value = serviceOfTheDay.id;
+        } else {
+            dailyPromotionInput.value = '';
+        }
+    }
+
     serviceSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
         if (this.value) {
             const duration = selectedOption.dataset.duration;
             const price = selectedOption.dataset.price;
             const name = selectedOption.text.split(' - ')[0];
+            let priceHtml = `Стоимость: ${Number(price).toFixed(2)} руб.`;
+
+            updateDailyPromotionState();
+
+            if (serviceOfTheDay && Number(this.value) === serviceOfTheDay.service_id) {
+                const discounted = Number(price) * (1 - serviceOfTheDay.discount_percent / 100);
+                priceHtml = `Стоимость: <s>${Number(price).toFixed(2)} руб.</s> <strong>${discounted.toFixed(2)} руб.</strong> (скидка ${serviceOfTheDay.discount_percent}% — услуга дня)`;
+            }
+
             serviceInfo.innerHTML = `
                 <strong>${name}</strong><br>
                 Длительность: ${duration} минут<br>
-                Стоимость: ${Number(price).toFixed(2)} руб.
+                ${priceHtml}
             `;
             
             masterSelect.innerHTML = '<option value="">-- Выберите мастера --</option>';
@@ -143,6 +173,9 @@ document.addEventListener('DOMContentLoaded', function() {
             masterSelect.disabled = false;
             dateInput.disabled = false;
         } else {
+            if (dailyPromotionInput) {
+                dailyPromotionInput.value = '';
+            }
             serviceInfo.innerHTML = 'Выберите услугу для отображения информации';
             masterSelect.innerHTML = '<option value="">-- Сначала выберите услугу --</option>';
             masterSelect.disabled = true;

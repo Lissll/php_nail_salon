@@ -183,7 +183,6 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Редактирование услуги
     const editButtons = document.querySelectorAll('.edit-service');
     const editModal = new bootstrap.Modal(document.getElementById('editServiceModal'));
     const editForm = document.getElementById('edit-service-form');
@@ -206,7 +205,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Удаление услуги
     const deleteButtons = document.querySelectorAll('.delete-service');
     const deleteForm = document.getElementById('delete-service-form');
     const deleteServiceModal = new bootstrap.Modal(document.getElementById('deleteServiceModal'));

@@ -27,9 +27,7 @@
                                 id="service_id" name="service_id" required>
                             @foreach($services as $service)
                                 <option value="{{ $service->id }}" 
-                                        {{ $appointment->service_id == $service->id ? 'selected' : '' }}
-                                        data-duration="{{ $service->duration }}"
-                                        data-price="{{ $service->price }}">
+                                        {{ $appointment->service_id == $service->id ? 'selected' : '' }}>
                                     {{ $service->name }} - {{ $service->duration }} мин. - {{ number_format($service->price, 2) }} ₽
                                 </option>
                             @endforeach

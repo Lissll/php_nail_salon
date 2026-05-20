@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -30,7 +31,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::middleware(['role:admin,manager,client'])->group(function () {
         Route::get('/appointments/create', [AppointmentController::class, 'create'])->name('appointments.create');
+        Route::get('/appointments/create-combo/{combo}', [AppointmentController::class, 'createCombo'])->name('appointments.create-combo');
         Route::post('/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
+        Route::post('/appointments/combo', [AppointmentController::class, 'storeCombo'])->name('appointments.store-combo');
         Route::post('/appointments/available-slots', [AppointmentController::class, 'getAvailableSlots'])->name('appointments.available-slots');
     });
 
@@ -51,5 +54,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/services/{service}/edit', [ServiceController::class, 'edit'])->name('services.edit');
         Route::put('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
         Route::delete('/services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
+
+        Route::get('/promotions/manage', [PromotionController::class, 'manage'])->name('promotions.manage');
+        Route::post('/promotions/daily', [PromotionController::class, 'storeDaily'])->name('promotions.daily.store');
+        Route::delete('/promotions/daily/{dailyServicePromotion}', [PromotionController::class, 'destroyDaily'])->name('promotions.daily.destroy');
+        Route::post('/promotions/combos', [PromotionController::class, 'storeCombo'])->name('promotions.combo.store');
+        Route::put('/promotions/combos/{combo}', [PromotionController::class, 'updateCombo'])->name('promotions.combo.update');
+        Route::delete('/promotions/combos/{combo}', [PromotionController::class, 'destroyCombo'])->name('promotions.combo.destroy');
     });
 });

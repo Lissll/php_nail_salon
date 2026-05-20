@@ -39,7 +39,11 @@
                         <tr id="appointment-row-{{ $appointment->id }}" data-id="{{ $appointment->id }}">
                             <td>{{ $appointment->id }}</td>
                             <td>
-                                <strong>{{ $appointment->service->name }}</strong><br>
+                                <strong>{{ $appointment->service->name }}</strong>
+                                @if($appointment->promotion_label)
+                                    <span class="service-day-badge ms-1">{{ $appointment->promotion_label }}</span>
+                                @endif
+                                <br>
                                 <small class="text-muted">{{ $appointment->service->description }}</small>
                             </td>
                             @if(Auth::user()->isAdmin() || Auth::user()->isManager())
@@ -48,7 +52,17 @@
                             <td>{{ $appointment->master->name }}</td>
                             <td>{{ \Carbon\Carbon::parse($appointment->appointment_date)->format('d.m.Y H:i') }}</td>
                             <td>{{ $appointment->service->duration }} мин.</td>
-                            <td><strong>{{ number_format($appointment->service->price, 2) }} руб.</strong></td>
+                            <td>
+                                @if($appointment->hasDiscount())
+                                    <span class="text-muted text-decoration-line-through small d-block">
+                                        {{ number_format($appointment->service->price, 2) }} ₽
+                                    </span>
+                                    <strong class="text-primary">{{ number_format($appointment->final_price, 2) }} ₽</strong>
+                                    <small class="text-muted d-block">−{{ $appointment->discount_percent }}%</small>
+                                @else
+                                    <strong>{{ number_format($appointment->service->price, 2) }} ₽</strong>
+                                @endif
+                            </td>
                             <td id="status-cell-{{ $appointment->id }}">
                                 <span class="status-badge status-{{ $appointment->status }}" id="status-badge-{{ $appointment->id }}">
                                     @switch($appointment->status)
