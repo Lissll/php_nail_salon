@@ -3,109 +3,114 @@
 @section('title', 'Записи')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h2 class="page-heading mb-0">Записи</h2>
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+    <div>
+        <h2 class="page-heading">Записи</h2>
+        <p class="page-subtitle">Расписание и управление записями клиентов</p>
+    </div>
     @if(Auth::user()->isClient() || Auth::user()->isAdmin() || Auth::user()->isManager())
-        <a href="{{ route('appointments.create') }}" class="btn btn-primary">Новая запись</a>
+        <a href="{{ route('appointments.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Новая запись</a>
     @endif
 </div>
 
 <div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Услуга</th>
+    <div class="card-header bg-primary">
+        Журнал записей
+        <span class="rn-chip ms-auto">{{ $appointments->count() }} {{ trans_choice('запись|записи|записей', $appointments->count()) }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Услуга</th>
+                    @if(Auth::user()->isAdmin() || Auth::user()->isManager())
+                        <th>Клиент</th>
+                    @endif
+                    <th>Мастер</th>
+                    <th>Дата и время</th>
+                    <th>Цена</th>
+                    <th>Статус</th>
+                    @if(Auth::user()->isMaster() || Auth::user()->isAdmin() || Auth::user()->isManager())
+                        <th class="text-end">Действия</th>
+                    @endif
+                </tr>
+            </thead>
+            <tbody id="appointments-table-body">
+                @forelse($appointments as $appointment)
+                    <tr id="appointment-row-{{ $appointment->id }}" data-id="{{ $appointment->id }}">
+                        <td>
+                            <div style="font-weight: 800;">{{ $appointment->service->name }}</div>
+                            <small class="text-muted d-flex align-items-center gap-2 mt-1">
+                                <span class="rn-chip" style="padding: .15rem .6rem; font-size: .72rem;">{{ $appointment->service->duration }} мин.</span>
+                                @if($appointment->promotion_label)
+                                    <span class="rn-discount" style="padding: .15rem .6rem; font-size: .72rem;">{{ $appointment->promotion_label }}</span>
+                                @endif
+                            </small>
+                        </td>
                         @if(Auth::user()->isAdmin() || Auth::user()->isManager())
-                            <th>Клиент</th>
+                            <td>{{ $appointment->client->name }}</td>
                         @endif
-                        <th>Мастер</th>
-                        <th>Дата и время</th>
-                        <th>Длительность</th>
-                        <th>Цена</th>
-                        <th>Статус</th>
+                        <td>{{ $appointment->master->name }}</td>
+                        <td style="white-space: nowrap;">
+                            {{ \Carbon\Carbon::parse($appointment->appointment_date)->format('d.m.Y H:i') }}
+                        </td>
+                        <td style="white-space: nowrap;">
+                            @if($appointment->hasDiscount())
+                                <span class="old-price d-block">{{ number_format($appointment->service->price, 0, ',', ' ') }} ₽</span>
+                                <span class="rn-price">{{ number_format($appointment->final_price, 0, ',', ' ') }} ₽</span>
+                                <small class="rn-discount" style="padding: .1rem .55rem; font-size: .7rem;">−{{ $appointment->discount_percent }}%</small>
+                            @else
+                                <span class="rn-price">{{ number_format($appointment->service->price, 0, ',', ' ') }} ₽</span>
+                            @endif
+                        </td>
+                        <td id="status-cell-{{ $appointment->id }}">
+                            <span class="status-badge status-{{ $appointment->status }}" id="status-badge-{{ $appointment->id }}">
+                                @switch($appointment->status)
+                                    @case('pending') Ожидает @break
+                                    @case('confirmed') Подтверждена @break
+                                    @case('completed') Выполнена @break
+                                    @case('cancelled') Отменена @break
+                                @endswitch
+                            </span>
+                        </td>
+
                         @if(Auth::user()->isMaster())
-                            <th>Действия</th>
+                            <td class="text-end">
+                                @if(!in_array($appointment->status, ['completed', 'cancelled']))
+                                    <select class="form-select form-select-sm status-select d-inline-block"
+                                            data-id="{{ $appointment->id }}"
+                                            data-url="{{ route('appointments.update-status', $appointment->id) }}"
+                                            style="min-width: 150px; width: auto; border-radius: 3rem; font-weight: 700;">
+                                        <option value="pending" {{ $appointment->status === 'pending' ? 'selected' : '' }}>Ожидает</option>
+                                        <option value="confirmed" {{ $appointment->status === 'confirmed' ? 'selected' : '' }}>Подтвердить</option>
+                                        <option value="completed" {{ $appointment->status === 'completed' ? 'selected' : '' }}>Выполнить</option>
+                                        <option value="cancelled" {{ $appointment->status === 'cancelled' ? 'selected' : '' }}>Отменить</option>
+                                    </select>
+                                @endif
+                            </td>
                         @endif
+
                         @if(Auth::user()->isAdmin() || Auth::user()->isManager())
-                            <th>Управление</th>
+                            <td class="text-end text-nowrap">
+                                <a href="{{ route('appointments.edit', $appointment->id) }}" class="btn btn-sm btn-warning" title="Редактировать">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger delete-appointment" title="Удалить" data-id="{{ $appointment->id }}" data-url="{{ route('appointments.destroy', $appointment->id) }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
                         @endif
                     </tr>
-                </thead>
-                <tbody id="appointments-table-body">
-                    @forelse($appointments as $appointment)
-                        <tr id="appointment-row-{{ $appointment->id }}" data-id="{{ $appointment->id }}">
-                            <td>{{ $appointment->id }}</td>
-                            <td>
-                                <strong>{{ $appointment->service->name }}</strong>
-                                @if($appointment->promotion_label)
-                                    <span class="service-day-badge ms-1">{{ $appointment->promotion_label }}</span>
-                                @endif
-                                <br>
-                                <small class="text-muted">{{ $appointment->service->description }}</small>
-                            </td>
-                            @if(Auth::user()->isAdmin() || Auth::user()->isManager())
-                                <td>{{ $appointment->client->name }}</td>
-                            @endif
-                            <td>{{ $appointment->master->name }}</td>
-                            <td>{{ \Carbon\Carbon::parse($appointment->appointment_date)->format('d.m.Y H:i') }}</td>
-                            <td>{{ $appointment->service->duration }} мин.</td>
-                            <td>
-                                @if($appointment->hasDiscount())
-                                    <span class="text-muted text-decoration-line-through small d-block">
-                                        {{ number_format($appointment->service->price, 2) }} ₽
-                                    </span>
-                                    <strong class="text-primary">{{ number_format($appointment->final_price, 2) }} ₽</strong>
-                                    <small class="text-muted d-block">−{{ $appointment->discount_percent }}%</small>
-                                @else
-                                    <strong>{{ number_format($appointment->service->price, 2) }} ₽</strong>
-                                @endif
-                            </td>
-                            <td id="status-cell-{{ $appointment->id }}">
-                                <span class="status-badge status-{{ $appointment->status }}" id="status-badge-{{ $appointment->id }}">
-                                    @switch($appointment->status)
-                                        @case('pending') Ожидает @break
-                                        @case('confirmed') Подтверждена @break
-                                        @case('completed') Выполнена @break
-                                        @case('cancelled') Отменена @break
-                                    @endswitch
-                                </span>
-                            </td>
-                            
-                            @if(Auth::user()->isMaster())
-                                <td>
-                                    @if(!in_array($appointment->status, ['completed', 'cancelled']))
-                                        <select class="form-select form-select-sm status-select" 
-                                                data-id="{{ $appointment->id }}"
-                                                data-url="{{ route('appointments.update-status', $appointment->id) }}">
-                                            <option value="pending" {{ $appointment->status === 'pending' ? 'selected' : '' }}>Ожидает</option>
-                                            <option value="confirmed" {{ $appointment->status === 'confirmed' ? 'selected' : '' }}>Подтвердить</option>
-                                            <option value="completed" {{ $appointment->status === 'completed' ? 'selected' : '' }}>Выполнить</option>
-                                            <option value="cancelled" {{ $appointment->status === 'cancelled' ? 'selected' : '' }}>Отменить</option>
-                                        </select>
-                                    @endif
-                                </td>
-                            @endif
-                            
-                            @if(Auth::user()->isAdmin() || Auth::user()->isManager())
-                                <td>
-                                    <div class="d-flex gap-2 flex-wrap">
-                                        <a href="{{ route('appointments.edit', $appointment->id) }}" class="btn btn-sm btn-warning manager-action-btn">Редактировать</a>
-                                        <button type="button" class="btn btn-sm btn-danger delete-appointment manager-action-btn" data-id="{{ $appointment->id }}" data-url="{{ route('appointments.destroy', $appointment->id) }}">Удалить</button>
-                                    </div>
-                                </td>
-                            @endif
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="text-center py-5">Записей пока нет</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                @empty
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="text-muted mb-1" style="font-weight: 700;">Записей пока нет</div>
+                            <small class="text-muted">Создайте первую запись по кнопке выше</small>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -116,8 +121,8 @@
                 <h5 class="modal-title">Удаление записи</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
             </div>
-            <div class="modal-body">
-                Вы уверены, что хотите удалить эту запись?
+            <div class="modal-body py-4">
+                Вы уверены, что хотите удалить эту запись? Это действие нельзя отменить.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
@@ -132,7 +137,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    
+
     function showMessage(message, type) {
         const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
         const alert = document.createElement('div');
@@ -146,17 +151,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         setTimeout(() => alert.remove(), 3000);
     }
-    
+
     function getStatusText(status) {
         const map = {pending: 'Ожидает', confirmed: 'Подтверждена', completed: 'Выполнена', cancelled: 'Отменена'};
         return map[status] || status;
     }
-    
+
     function getStatusClass(status) {
         const map = {pending: 'status-pending', confirmed: 'status-confirmed', completed: 'status-completed', cancelled: 'status-cancelled'};
         return map[status] || '';
     }
-    
+
     const statusSelects = document.querySelectorAll('.status-select');
     statusSelects.forEach(select => {
         select.addEventListener('change', function(e) {
@@ -165,9 +170,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const status = this.value;
             const selectElement = this;
             const originalValue = selectElement.value;
-            
+
             selectElement.disabled = true;
-            
+
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -203,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
-    
+
     const deleteButtons = document.querySelectorAll('.delete-appointment');
     const deleteAppointmentModal = new bootstrap.Modal(document.getElementById('deleteAppointmentModal'));
     const confirmDeleteAppointmentBtn = document.getElementById('confirm-delete-appointment-btn');

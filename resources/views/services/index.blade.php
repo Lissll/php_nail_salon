@@ -5,7 +5,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <h2 class="page-heading mb-0">
-        <i class="bi bi-stars text-primary"></i> Наши услуги
+        Наши услуги
     </h2>
     @if(Auth::user()->isAdmin() || Auth::user()->isManager())
         <a href="{{ route('services.manage') }}" class="btn btn-primary">
@@ -50,7 +50,7 @@
                             'return' => 'services',
                             'daily_promotion' => ($serviceOfTheDay && $serviceOfTheDay->service_id === $service->id) ? 1 : null,
                         ]) }}" class="btn btn-primary btn-sm w-100">
-                            <i class="bi bi-calendar-plus"></i> Записаться
+                            Записаться
                         </a>
                     @endif
                 </div>

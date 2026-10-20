@@ -3,22 +3,24 @@
 @section('title', 'Дашборд')
 
 @section('content')
-<div class="row">
-    <div class="col-md-12">
-        <div class="card dash-welcome-card mb-4">
-            <div class="card-body">
-                <h4 class="mb-0">Добро пожаловать, {{ $user->name }}!</h4>
-                <p class="mb-0">
-                    Роль: 
-                    @if($user->isAdmin()) Администратор
-                    @elseif($user->isManager()) Менеджер
-                    @elseif($user->isMaster()) Мастер
-                    @else Клиент
-                    @endif
-                </p>
-            </div>
-        </div>
+<div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4">
+    <div>
+        <h2 class="page-heading">Здравствуйте, {{ $user->name }}!</h2>
+        <p class="page-subtitle">{{ now()->format('d.m.Y') }} ·
+            @if($user->isAdmin()) панель администратора
+            @elseif($user->isManager()) панель менеджера
+            @elseif($user->isMaster()) рабочий кабинет мастера
+            @else личный кабинет клиента
+            @endif
+        </p>
     </div>
+    <span class="rn-role-pill">
+        @if($user->isAdmin()) Администратор
+        @elseif($user->isManager()) Менеджер
+        @elseif($user->isMaster()) Мастер
+        @else Клиент
+        @endif
+    </span>
 </div>
 
 @if($user->isClient())
@@ -29,209 +31,306 @@
     ])
 @endif
 
-<div class="row">
+<div class="row g-3 mb-4">
     @if($user->isAdmin())
-        <div class="col-md-3 mb-4">
-            <div class="card text-white stat-card-soft bg-info">
-                <div class="card-body">
-                    <h5 class="card-title">Всего записей</h5>
-                    <p class="card-text display-4">{{ $stats['total_appointments'] }}</p>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-calendar3"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Всего записей</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['total_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card text-white stat-card-soft bg-warning">
-                <div class="card-body">
-                    <h5 class="card-title">Ожидают подтверждения</h5>
-                    <p class="card-text display-4">{{ $stats['pending_appointments'] }}</p>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-hourglass-split"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Ожидают</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['pending_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card text-white stat-card-soft bg-success">
-                <div class="card-body">
-                    <h5 class="card-title">Выполнено</h5>
-                    <p class="card-text display-4">{{ $stats['completed_appointments'] }}</p>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-check2-circle"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Выполнено</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['completed_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card text-white stat-card-soft bg-primary">
-                <div class="card-body">
-                    <h5 class="card-title">Записи на сегодня</h5>
-                    <p class="card-text display-4">{{ $stats['today_appointments'] }}</p>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-sun"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Сегодня</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['today_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-6 mb-4">
-            <div class="card text-white stat-card-soft bg-secondary">
-                <div class="card-body">
-                    <h5 class="card-title">Всего пользователей</h5>
-                    <p class="card-text display-4">{{ $stats['total_users'] }}</p>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-people"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Пользователей</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['total_users'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-6 mb-4">
-            <div class="card text-white stat-card-soft bg-dark">
-                <div class="card-body">
-                    <h5 class="card-title">Мастеров</h5>
-                    <p class="card-text display-4">{{ $stats['total_masters'] }}</p>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-scissors"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Мастеров</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['total_masters'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
+
     @elseif($user->isManager())
-        <div class="col-md-3 mb-4">
-            <div class="card text-white stat-card-soft bg-info">
-                <div class="card-body">
-                    <h5 class="card-title">Всего записей</h5>
-                    <p class="card-text display-4">{{ $stats['total_appointments'] }}</p>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-calendar3"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Всего записей</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['total_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card text-white stat-card-soft bg-warning">
-                <div class="card-body">
-                    <h5 class="card-title">Ожидают подтверждения</h5>
-                    <p class="card-text display-4">{{ $stats['pending_appointments'] }}</p>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-hourglass-split"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Ожидают</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['pending_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card text-white stat-card-soft bg-success">
-                <div class="card-body">
-                    <h5 class="card-title">Выполнено</h5>
-                    <p class="card-text display-4">{{ $stats['completed_appointments'] }}</p>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-check2-circle"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Выполнено</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['completed_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-3 mb-4">
-            <div class="card text-white stat-card-soft bg-primary">
-                <div class="card-body">
-                    <h5 class="card-title">Записи на сегодня</h5>
-                    <p class="card-text display-4">{{ $stats['today_appointments'] }}</p>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-sun"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Сегодня</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['today_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-12 mb-4">
-            <div class="card text-white stat-card-soft bg-secondary">
-                <div class="card-body">
-                    <h5 class="card-title">Всего клиентов</h5>
-                    <p class="card-text display-4">{{ $stats['total_clients'] }}</p>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-person-heart"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Клиентов</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['total_clients'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
+
     @elseif($user->isMaster())
-        <div class="col-md-4 mb-4">
-            <div class="card text-white stat-card-soft bg-success">
-                <div class="card-body">
-                    <h5 class="card-title">Записи на сегодня</h5>
-                    <p class="card-text display-4">{{ $stats['my_today_appointments'] }}</p>
+        <div class="col-md-4">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-sun"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Сегодня</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['my_today_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4 mb-4">
-            <div class="card text-white stat-card-soft bg-warning">
-                <div class="card-body">
-                    <h5 class="card-title">Ожидают подтверждения</h5>
-                    <p class="card-text display-4">{{ $stats['my_pending_appointments'] }}</p>
+        <div class="col-md-4">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-hourglass-split"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Ожидают</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['my_pending_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4 mb-4">
-            <div class="card text-white stat-card-soft bg-info">
-                <div class="card-body">
-                    <h5 class="card-title">Записи на неделю</h5>
-                    <p class="card-text display-4">{{ $stats['my_week_appointments'] }}</p>
+        <div class="col-md-4">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-calendar-week"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">На неделю</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['my_week_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
+
     @else
-        <div class="col-md-4 mb-4">
-            <div class="card text-white stat-card-soft bg-info">
-                <div class="card-body">
-                    <h5 class="card-title">Мои записи</h5>
-                    <p class="card-text display-4">{{ $stats['my_appointments'] }}</p>
+        <div class="col-md-4">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-calendar3"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Мои записи</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['my_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4 mb-4">
-            <div class="card text-white stat-card-soft bg-primary">
-                <div class="card-body">
-                    <h5 class="card-title">Предстоящие записи</h5>
-                    <p class="card-text display-4">{{ $stats['my_upcoming_appointments'] }}</p>
+        <div class="col-md-4">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-calendar-heart"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Предстоящие</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['my_upcoming_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4 mb-4">
-            <div class="card text-white stat-card-soft bg-success">
-                <div class="card-body">
-                    <h5 class="card-title">Выполнено</h5>
-                    <p class="card-text display-4">{{ $stats['my_completed_appointments'] }}</p>
+        <div class="col-md-4">
+            <div class="card stat-card-soft h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="width: 2.6rem; height: 2.6rem; border-radius: .9rem; background: var(--rn-100); color: var(--rn-700); display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="bi bi-check2-circle"></i>
+                        </span>
+                        <div>
+                            <div class="text-muted" style="font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;">Выполнено</div>
+                            <div class="display-4" style="font-size: 1.7rem;">{{ $stats['my_completed_appointments'] }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     @endif
 </div>
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Быстрые действия</h5>
-            </div>
-            <div class="card-body">
-                <div class="row quick-actions">
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ route('appointments.index') }}" class="btn btn-outline-primary w-100">
-                            Мои записи
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ route('services.index') }}" class="btn btn-outline-primary w-100">
-                            Услуги
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ route('appointments.create', ['return' => 'dashboard']) }}" class="btn btn-outline-primary w-100">
-                            Новая запись
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ route('profile.index') }}" class="btn btn-outline-primary w-100">
-                            Личный кабинет
-                        </a>
-                    </div>
-                    @if($user->isAdmin() || $user->isManager())
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ route('users.index') }}" class="btn btn-outline-primary w-100">
-                            Управление пользователями
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ route('promotions.manage') }}" class="btn btn-outline-primary w-100">
-                            Акции и комбо
-                        </a>
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div>
+<h6 class="rn-section-title"><i class="bi bi-lightning-charge"></i> Быстрые действия</h6>
+
+<div class="row g-3 quick-actions">
+    <div class="col-6 col-md-3">
+        <a href="{{ route('appointments.index') }}" class="btn w-100 d-flex align-items-center gap-2">
+            <i class="bi bi-calendar3" style="color: var(--rn-primary);"></i> Мои записи
+        </a>
     </div>
+    <div class="col-6 col-md-3">
+        <a href="{{ route('services.index') }}" class="btn w-100 d-flex align-items-center gap-2">
+            <i class="bi bi-stars" style="color: var(--rn-primary);"></i> Услуги
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{{ route('appointments.create', ['return' => 'dashboard']) }}" class="btn w-100 d-flex align-items-center gap-2">
+            <i class="bi bi-plus-lg" style="color: var(--rn-primary);"></i> Новая запись
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{{ route('profile.index') }}" class="btn w-100 d-flex align-items-center gap-2">
+            <i class="bi bi-person" style="color: var(--rn-primary);"></i> Личный кабинет
+        </a>
+    </div>
+    @if($user->isAdmin() || $user->isManager())
+    <div class="col-6 col-md-3">
+        <a href="{{ route('users.index') }}" class="btn w-100 d-flex align-items-center gap-2">
+            <i class="bi bi-people" style="color: var(--rn-primary);"></i> Пользователи
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{{ route('promotions.manage') }}" class="btn w-100 d-flex align-items-center gap-2">
+            <i class="bi bi-tag" style="color: var(--rn-primary);"></i> Акции и комбо
+        </a>
+    </div>
+    @endif
 </div>
 @endsection

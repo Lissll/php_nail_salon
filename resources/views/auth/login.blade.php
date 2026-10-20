@@ -3,15 +3,15 @@
 @section('title', 'Вход')
 
 @section('content')
-<div class="row justify-content-center py-lg-3">
+<div class="row justify-content-center py-lg-4">
     <div class="col-md-5 col-lg-4">
-        <div class="card auth-card shadow">
-            <div class="card-header">
-                <h4 class="mb-0">Добро пожаловать</h4>
-                <small class="opacity-75">Вход в личный кабинет</small>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ route('login') }}">
+        <div class="card text-center" style="border-radius: var(--rn-radius-xl);">
+            <div class="card-body p-4 p-md-5">
+                <div class="rn-avatar mx-auto mb-3" style="width: 72px; height: 72px; font-size: 1.6rem;">R</div>
+                <h4 class="mb-1" style="font-family: var(--rn-font-display); font-weight: 700;">Rose Nails</h4>
+                <p class="text-muted mb-4" style="font-weight: 600;">Вход в личный кабинет</p>
+
+                <form method="POST" action="{{ route('login') }}" class="text-start">
                     @csrf
 
                     <div class="mb-3">
@@ -35,16 +35,18 @@
 
                     <div class="mb-4 form-check">
                         <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                        <label class="form-check-label" for="remember">Запомнить меня</label>
+                        <label class="form-check-label" for="remember" style="font-weight: 700; color: var(--rn-ink-soft);">Запомнить меня</label>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 py-2">Войти</button>
+                    <button type="submit" class="btn btn-primary w-100 py-3" style="font-size: 1.05rem;">Войти</button>
                 </form>
 
-                <div class="alert alert-light border-0 mt-4 mb-0 small" style="background: rgba(157, 107, 115, 0.08); color: #4a3d40;">
-                    <strong>Тестовые аккаунты:</strong><br>
-                    <span class="text-muted">admin@gmail.com</span> · <span class="text-muted">manager@gmail.com</span> · <span class="text-muted">master@gmail.com</span> · <span class="text-muted">user@gmail.com</span><br>
-                    Пароль для всех: <code class="text-dark">123456</code>
+                <div class="mt-4 p-3 rounded text-center" style="background-color: var(--rn-bg); border: 1px solid var(--rn-border-soft);">
+                    <p class="mb-1 text-muted small" style="font-weight: 700;">Тестовые аккаунты:</p>
+                    <p class="mb-0 small" style="font-weight: 700; color: var(--rn-ink);">
+                        admin, manager, master, user <span class="text-muted">@gmail.com</span><br>
+                        Пароль: <code style="color: var(--rn-700); font-weight: 800;">123456</code>
+                    </p>
                 </div>
             </div>
         </div>

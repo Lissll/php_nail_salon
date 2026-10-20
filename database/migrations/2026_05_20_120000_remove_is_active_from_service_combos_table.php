@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('service_combos', function (Blueprint $table) {
-            $table->dropColumn('is_active');
-        });
+        if (Schema::hasColumn('service_combos', 'is_active')) {
+            Schema::table('service_combos', function (Blueprint $table) {
+                $table->dropColumn('is_active');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('service_combos', function (Blueprint $table) {
-            $table->boolean('is_active')->default(true);
-        });
+        if (! Schema::hasColumn('service_combos', 'is_active')) {
+            Schema::table('service_combos', function (Blueprint $table) {
+                $table->boolean('is_active')->default(true);
+            });
+        }
     }
 };

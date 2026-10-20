@@ -16,7 +16,7 @@ class AppointmentController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         if ($user->isAdmin() || $user->isManager()) {
             $appointments = Appointment::with(['client', 'service', 'master'])
                 ->orderBy('appointment_date', 'desc')
@@ -32,7 +32,7 @@ class AppointmentController extends Controller
                 ->orderBy('appointment_date', 'desc')
                 ->get();
         }
-        
+
         return view('appointments.index', compact('appointments'));
     }
 
@@ -45,7 +45,7 @@ class AppointmentController extends Controller
         if (! $services->contains('id', $selectedServiceId)) {
             $selectedServiceId = null;
         }
-        
+
         $user = Auth::user();
         $isAdminOrManager = $user->isAdmin() || $user->isManager();
         $serviceOfTheDay = DailyServicePromotion::forToday();
@@ -96,76 +96,73 @@ class AppointmentController extends Controller
         $masterId = $request->master_id;
         $date = $request->date;
         $serviceId = $request->service_id;
-        
+
         if (!$masterId || !$date || !$serviceId) {
             return response()->json([]);
         }
-        
+
         $master = User::find($masterId);
         $service = Service::find($serviceId);
-        
+
         if (!$master || !$service) {
             return response()->json([]);
         }
-        
+
         $selectedDate = Carbon::parse($date);
-        $dayOfWeek = $selectedDate->dayOfWeek;
-        
-        $workStart = 9;
-        $workEnd = 21;
-        
-        if ($dayOfWeek == 6 || $dayOfWeek == 0) {
-            $workStart = 10;
-            $workEnd = 19;
+
+        if ($selectedDate->lt(Carbon::today())) {
+            return response()->json([]);
         }
-        
+
+        [$workStart, $workEnd] = $this->workHoursFor($selectedDate);
+
         $existingAppointments = Appointment::where('master_id', $masterId)
             ->whereDate('appointment_date', $date)
             ->whereNotIn('status', ['cancelled'])
             ->get();
-        
+
         $availableSlots = [];
         $currentTime = Carbon::parse($date . ' ' . $workStart . ':00');
         $endTime = Carbon::parse($date . ' ' . $workEnd . ':00');
         $duration = $service->duration;
-        
+
         while ($currentTime->copy()->addMinutes($duration) <= $endTime) {
             $slotEnd = $currentTime->copy()->addMinutes($duration);
             $isAvailable = true;
-            
+
             foreach ($existingAppointments as $appointment) {
                 $appointmentStart = Carbon::parse($appointment->appointment_date);
                 $appointmentEnd = $appointmentStart->copy()->addMinutes(
                     $appointment->service->duration
                 );
-                
+
                 if ($currentTime < $appointmentEnd && $slotEnd > $appointmentStart) {
                     $isAvailable = false;
                     break;
                 }
             }
-            
-            if ($isAvailable && $currentTime > Carbon::now()) {
+
+            if ($isAvailable && $currentTime > Carbon::now()->addMinutes(10)) {
                 $availableSlots[] = $currentTime->format('H:i');
             }
-            
+
             $currentTime->addMinutes(30);
         }
-        
+
         return response()->json($availableSlots);
     }
 
     public function store(Request $request)
     {
         $user = Auth::user();
-        
+
         $validated = $request->validate([
             'service_id' => 'required|exists:services,id',
             'master_id' => 'required|exists:users,id',
-            'appointment_date' => 'required|date',
-            'appointment_time' => 'required',
+            'appointment_date' => 'required|date|after_or_equal:today',
+            'appointment_time' => ['required', 'regex:/^(?:[01]\d|2[0-3]):[0-5]\d$/'],
         ]);
-        
+
         if ($user->isAdmin() || $user->isManager()) {
             $request->validate([
                 'client_id' => 'required|exists:users,id',
@@ -174,14 +171,18 @@ class AppointmentController extends Controller
         } else {
             $clientId = $user->id;
         }
-        
+
+        $service = Service::findOrFail($validated['service_id']);
         $appointmentDateTime = Carbon::parse($validated['appointment_date'] . ' ' . $validated['appointment_time']);
-        
-        if ($appointmentDateTime < Carbon::now()) {
+
+        if ($appointmentDateTime->lt(Carbon::now())) {
             return back()->withErrors(['appointment_date' => 'Нельзя записаться на прошедшее время'])->withInput();
         }
 
-        $service = Service::findOrFail($validated['service_id']);
+        if (! $this->isWithinWorkingHours($appointmentDateTime, $service->duration)) {
+            [$workStart, $workEnd] = $this->workHoursFor($appointmentDateTime);
+            return back()->withErrors(['appointment_time' => "Запись возможна только с {$workStart}:00 до {$workEnd}:00 (с учётом длительности услуги)"])->withInput();
+        }
 
         if ($this->masterHasScheduleConflict($validated['master_id'], $appointmentDateTime, $service->duration)) {
             return back()->withErrors(['appointment_time' => 'Это время уже занято'])->withInput();
@@ -218,11 +219,11 @@ class AppointmentController extends Controller
         $validated = $request->validate([
             'combo_id' => 'required|exists:service_combos,id',
             'master_id_1' => 'required|exists:users,id',
-            'appointment_date_1' => 'required|date',
-            'appointment_time_1' => 'required',
+            'appointment_date_1' => 'required|date|after_or_equal:today',
+            'appointment_time_1' => ['required', 'regex:/^(?:[01]\d|2[0-3]):[0-5]\d$/'],
             'master_id_2' => 'required|exists:users,id',
-            'appointment_date_2' => 'required|date',
-            'appointment_time_2' => 'required',
+            'appointment_date_2' => 'required|date|after_or_equal:today',
+            'appointment_time_2' => ['required', 'regex:/^(?:[01]\d|2[0-3]):[0-5]\d$/'],
         ]);
 
         $combo = ServiceCombo::with(['service1', 'service2'])->findOrFail($validated['combo_id']);
@@ -256,8 +257,15 @@ class AppointmentController extends Controller
         $pendingSlots = [];
 
         foreach ($appointmentsData as $data) {
-            if ($data['datetime'] < Carbon::now()) {
+            if ($data['datetime']->lt(Carbon::now())) {
                 return back()->withErrors([$data['date_field'] => 'Нельзя записаться на прошедшее время'])->withInput();
+            }
+
+            if (! $this->isWithinWorkingHours($data['datetime'], $data['service']->duration)) {
+                [$workStart, $workEnd] = $this->workHoursFor($data['datetime']);
+                return back()->withErrors([
+                    $data['time_field'] => "Запись возможна только с {$workStart}:00 до {$workEnd}:00",
+                ])->withInput();
             }
 
             if ($this->masterHasScheduleConflict(
@@ -311,6 +319,25 @@ class AppointmentController extends Controller
         return $promotion?->discount_percent;
     }
 
+    private function workHoursFor(Carbon $date): array
+    {
+        if ($date->isWeekend()) {
+            return [10, 19];
+        }
+
+        return [9, 21];
+    }
+
+    private function isWithinWorkingHours(Carbon $start, int $duration): bool
+    {
+        [$workStart, $workEnd] = $this->workHoursFor($start);
+
+        $open = $start->copy()->startOfDay()->addHours($workStart);
+        $close = $start->copy()->startOfDay()->addHours($workEnd);
+
+        return ! $start->lt($open) && $start->copy()->addMinutes($duration)->lte($close);
+    }
+
     private function intervalsOverlap(Carbon $start1, int $duration1, Carbon $start2, int $duration2): bool
     {
         $end1 = $start1->copy()->addMinutes($duration1);
@@ -319,12 +346,15 @@ class AppointmentController extends Controller
         return $start1->lt($end2) && $end1->gt($start2);
     }
 
-    private function masterHasScheduleConflict(int $masterId, Carbon $start, int $duration, array $pendingSlots = []): bool
+    private function masterHasScheduleConflict(int $masterId, Carbon $start, int $duration, array $pendingSlots = [], ?int $excludeAppointmentId = null): bool
     {
         $existingAppointments = Appointment::with('service')
             ->where('master_id', $masterId)
             ->whereDate('appointment_date', $start->toDateString())
             ->whereNotIn('status', ['cancelled'])
+            ->when($excludeAppointmentId, function ($query) use ($excludeAppointmentId) {
+                $query->where('id', '!=', $excludeAppointmentId);
+            })
             ->get();
 
         foreach ($existingAppointments as $appointment) {
@@ -352,19 +382,50 @@ class AppointmentController extends Controller
     {
         $services = Service::all();
         $masters = User::where('role', User::ROLE_MASTER)->get();
-        
+
         return view('appointments.edit', compact('appointment', 'services', 'masters'));
     }
 
     public function update(Request $request, Appointment $appointment)
     {
+        if (in_array($appointment->status, [Appointment::STATUS_COMPLETED, Appointment::STATUS_CANCELLED], true)) {
+            return redirect()->route('appointments.index')
+                ->with('error', 'Нельзя редактировать завершённую или отменённую запись');
+        }
+
         $validated = $request->validate([
             'service_id' => 'required|exists:services,id',
             'master_id' => 'required|exists:users,id',
-            'appointment_date' => 'required|date',
+            'appointment_date' => 'required|date|after:now',
         ]);
 
-        $appointment->update($validated);
+        $newDateTime = Carbon::parse($validated['appointment_date']);
+        $service = Service::findOrFail($validated['service_id']);
+
+        if (! $this->isWithinWorkingHours($newDateTime, $service->duration)) {
+            [$workStart, $workEnd] = $this->workHoursFor($newDateTime);
+            return back()->withErrors([
+                'appointment_date' => "Запись возможна только с {$workStart}:00 до {$workEnd}:00 (с учётом длительности услуги)",
+            ])->withInput();
+        }
+
+        if ($this->masterHasScheduleConflict(
+            (int) $validated['master_id'],
+            $newDateTime,
+            $service->duration,
+            [],
+            $appointment->id
+        )) {
+            return back()->withErrors([
+                'appointment_date' => 'У выбранного мастера это время уже занято',
+            ])->withInput();
+        }
+
+        $appointment->update([
+            'service_id' => $validated['service_id'],
+            'master_id' => $validated['master_id'],
+            'appointment_date' => $newDateTime,
+        ]);
 
         return redirect()->route('appointments.index')
             ->with('success', 'Запись успешно обновлена');
@@ -374,7 +435,7 @@ class AppointmentController extends Controller
     {
         try {
             $status = $request->input('status');
-            
+
             if (!in_array($status, ['pending', 'confirmed', 'completed', 'cancelled'])) {
                 return response()->json(['success' => false, 'error' => 'Некорректный статус'], 400);
             }
@@ -404,7 +465,7 @@ class AppointmentController extends Controller
     {
         try {
             $appointment->delete();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Запись удалена'
@@ -416,7 +477,7 @@ class AppointmentController extends Controller
             ], 500);
         }
     }
-    
+
     private function getStatusText($status)
     {
         switch ($status) {
@@ -427,7 +488,7 @@ class AppointmentController extends Controller
             default: return $status;
         }
     }
-    
+
     private function getStatusClass($status)
     {
         switch ($status) {

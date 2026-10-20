@@ -9,7 +9,7 @@
                 <article class="promo-card">
                     <div class="promo-card-inner">
                         <div class="promo-card-header">
-                            <span class="promo-label"><i class="bi bi-sun"></i> Услуга дня</span>
+                            <span class="promo-label">Услуга дня</span>
                         </div>
                         <div class="promo-card-body">
                             <h6 class="promo-card-title">{{ $serviceOfTheDay->service->name }}</h6>
@@ -44,7 +44,7 @@
                 <article class="promo-card">
                     <div class="promo-card-inner">
                         <div class="promo-card-header">
-                            <span class="promo-label"><i class="bi bi-box-seam"></i> Комбо</span>
+                            <span class="promo-label">Комбо</span>
                         </div>
                         <div class="promo-card-body">
                             <h6 class="promo-card-title">{{ $combo->name }}</h6>

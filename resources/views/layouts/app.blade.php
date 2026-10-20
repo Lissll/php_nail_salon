@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Салон красоты — @yield('title', 'CRM')</title>
+    <title>Rose Nails — @yield('title', 'CRM')</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -16,7 +16,7 @@
     <nav class="navbar navbar-expand-lg navbar-salon sticky-top">
         <div class="container">
             <a class="navbar-brand" href="{{ route('dashboard') }}">
-                <i class="bi bi-flower1"></i> Belle Époque
+                Rose Nails
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Меню">
                 <span class="navbar-toggler-icon"></span>
@@ -26,7 +26,7 @@
                     @auth
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('appointments.*') ? 'active' : '' }}" href="{{ route('appointments.index') }}">
-                                <i class="bi bi-calendar-check"></i> Записи
+                                <i class="bi bi-calendar3"></i> Записи
                             </a>
                         </li>
                         <li class="nav-item">
@@ -37,7 +37,7 @@
                         @if(Auth::user()->isAdmin() || Auth::user()->isManager())
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('services.manage') || request()->routeIs('services.edit') ? 'active' : '' }}" href="{{ route('services.manage') }}">
-                                    <i class="bi bi-sliders"></i> Управление услугами
+                                    <i class="bi bi-sliders"></i> Управление
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -82,21 +82,21 @@
 
     <main class="container mt-4 flex-grow-1">
         @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <div class="alert alert-success alert-dismissible fade show alert-auto-dismiss" role="alert">
                 {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
             </div>
         @endif
 
         @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show alert-auto-dismiss" role="alert">
                 {{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
             </div>
         @endif
 
         @if($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show alert-auto-dismiss" role="alert">
                 <ul class="mb-0">
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -111,12 +111,24 @@
 
     <footer class="footer-salon mt-auto">
         <div class="container">
-            <div class="mb-2" style="font-family: var(--salon-font); font-size: 1.15rem; color: rgba(255,255,255,0.9);">Belle Époque</div>
-            <span class="text-muted">© {{ date('Y') }} Салон красоты. Все права защищены.</span>
+            <div class="brand-line">Rose Nails</div>
+            <span class="text-muted">© {{ date('Y') }} Маникюрный салон. Все права защищены.</span>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.alert-auto-dismiss').forEach(function (alert) {
+                setTimeout(function () {
+                    alert.classList.remove('show');
+                    setTimeout(function () {
+                        alert.remove();
+                    }, 500);
+                }, 4000);
+            });
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>

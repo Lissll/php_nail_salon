@@ -1,13 +1,13 @@
 @extends('layouts.guest')
-@section('title', 'Belle Époque — салон красоты')
+
+@section('title', 'Rose Nails — маникюрный салон')
+
 @section('content')
     <section class="hero-salon">
-        <div class="container text-center">
-            <p class="text-uppercase small mb-2" style="letter-spacing: 0.25em; opacity: 0.75;">уход · стиль · гармония</p>
-            <h1 class="mb-3">Ваша красота — наша страсть</h1>
-            <p class="lead mx-auto" style="max-width: 32rem;">Индивидуальный подход, бережные процедуры и атмосфера, в которой хочется возвращаться снова и снова.</p>
-            <a href="{{ route('login') }}" class="btn btn-light btn-lg mt-3">Записаться онлайн</a>
-        </div>
+        <span class="hero-overline">Уход · Стиль · Вдохновение</span>
+        <h1 class="mb-3">Маникюр, в который влюбляешься</h1>
+        <p class="lead mx-auto">Стойкий гель-лак, аккуратный педикюр и авторский дизайн — в уютной атмосфере и с любовью к деталям.</p>
+        <a href="{{ route('login') }}" class="btn btn-primary btn-lg mt-2 px-5 py-3">Записаться онлайн</a>
     </section>
 
     <div class="container pb-4">
@@ -19,43 +19,40 @@
     </div>
 
     <div class="container flex-grow-1 pb-5">
-        <div class="row mb-2">
-            <div class="col-12 text-center">
-                <h2 class="page-heading display-6">Наши услуги</h2>
-                <p class="text-muted mx-auto mb-0" style="max-width: 28rem;">Выберите процедуру и забронируйте удобное время после входа в личный кабинет.</p>
+        <div class="row mb-5 text-center">
+            <div class="col-12">
+                <h2 class="page-heading mb-2">Наши услуги</h2>
+                <p class="text-muted mx-auto" style="max-width: 35rem; font-size: 1.1rem;">Выберите процедуру и забронируйте удобное время. Мы позаботимся о ваших ноготках.</p>
             </div>
         </div>
 
-        <div class="row g-4 mt-1">
+        <div class="row g-4">
             @forelse($services as $service)
                 <div class="col-md-6 col-lg-4">
                     <div class="card service-card h-100">
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title mb-2" style="font-family: var(--salon-font); font-size: 1.1rem; font-weight: 600;">{{ $service->name }}</h5>
-                            <p class="card-text text-muted small flex-grow-1">{{ $service->description }}</p>
-                            <hr class="my-3 opacity-25">
-                            <div class="row g-2 small">
-                                <div class="col-6">
-                                    <span class="text-muted d-block">Длительность</span>
-                                    <span class="fw-semibold">{{ $service->duration }} мин</span>
+                        <div class="card-body d-flex flex-column p-4">
+                            <h5 class="card-title mb-3" style="font-weight: 800; font-size: 1.2rem;">{{ $service->name }}</h5>
+                            <p class="card-text text-muted flex-grow-1 mb-4">{{ $service->description }}</p>
+
+                            <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded" style="background-color: var(--rn-bg);">
+                                <div>
+                                    <span class="text-muted d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800;">Длительность</span>
+                                    <span style="font-weight: 800; font-size: 1.05rem;">{{ $service->duration }} мин</span>
                                 </div>
-                                <div class="col-6 text-end">
-                                    <span class="text-muted d-block">Стоимость</span>
-                                    <span class="fw-semibold text-primary">{{ number_format($service->price, 0, ',', ' ') }} ₽</span>
+                                <div class="text-end">
+                                    <span class="text-muted d-block" style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800;">Стоимость</span>
+                                    <span class="rn-price" style="font-size: 1.15rem;">{{ number_format($service->price, 0, ',', ' ') }} ₽</span>
                                 </div>
                             </div>
-                        </div>
-                        <div class="card-footer bg-transparent pt-0 border-0 pb-4 px-4">
-                            <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm w-100 rounded-pill">
-                                Войти, чтобы записаться
-                            </a>
+
+                            <a href="{{ route('login') }}" class="btn btn-outline-primary w-100 py-2">Войти, чтобы записаться</a>
                         </div>
                     </div>
                 </div>
             @empty
                 <div class="col-12">
-                    <div class="alert alert-light border text-center shadow-sm">
-                        Услуги скоро появятся — следите за обновлениями.
+                    <div class="alert alert-light border text-center shadow-sm p-5" style="border-radius: 1.5rem;">
+                        <h5 class="mb-0 text-muted">Услуги скоро появятся.</h5>
                     </div>
                 </div>
             @endforelse
