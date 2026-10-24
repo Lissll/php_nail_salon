@@ -1,7 +1,7 @@
 @if($serviceOfTheDay || $combos->isNotEmpty())
 <section class="promo-section mb-4">
     <h5 class="page-heading mb-3">
-        <i class="bi bi-gem text-primary"></i> Специальные предложения
+        Специальные предложения
     </h5>
     <div class="row g-3">
         @if($serviceOfTheDay)
